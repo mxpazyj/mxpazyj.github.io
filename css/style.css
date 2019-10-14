@@ -1550,10 +1550,13 @@ pre code {
   border: none;
 }
 code {
-  padding: 0 5px;
-  border: 1px dotted #666;
+  margin: 0 2px;
+  padding: 2px 4px;
   border-radius: 2px;
-  -webkit-border-radius: 2px;
+  font-family: Roboto Mono, Source Sans Pro, Monaco, courier, monospace !important;
+  font-size: 0.88rem;
+  color: #e96900;
+  background-color: #f8f8f8;
 }
 .highlight {
   overflow-x: auto;
