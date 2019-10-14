@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang=en>
+<head><meta name="generator" content="Hexo 3.9.0">
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="description" content="一、前言 RxJava是什么呢？根据RxJava在GitHub上给出的描述RxJava – Reactive Extensions for the JVM – a library for composing asynchronous and event-based programs using observable sequences for the Java大致意思是：一个可以在JVM上使用的">
+<meta name="keywords" content="Android,RxJava">
+<meta property="og:type" content="article">
+<meta property="og:title" content="RxJava 分发订阅流程">
+<meta property="og:url" content="https://3o3o3.com/2019/06/20/RxJava 分发订阅流程/index.html">
+<meta property="og:site_name" content="JiapengMa&#39;s Blog">
+<meta property="og:description" content="一、前言 RxJava是什么呢？根据RxJava在GitHub上给出的描述RxJava – Reactive Extensions for the JVM – a library for composing asynchronous and event-based programs using observable sequences for the Java大致意思是：一个可以在JVM上使用的">
+<meta property="og:locale" content="en">
+<meta property="og:updated_time" content="2019-10-14T03:59:01.688Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="RxJava 分发订阅流程">
+<meta name="twitter:description" content="一、前言 RxJava是什么呢？根据RxJava在GitHub上给出的描述RxJava – Reactive Extensions for the JVM – a library for composing asynchronous and event-based programs using observable sequences for the Java大致意思是：一个可以在JVM上使用的">
+    
+    
+        
+          
+              <link rel="shortcut icon" href="/images/favicon.ico">
+          
+        
+        
+          
+            <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+          
+        
+        
+          
+            <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+          
+        
+    
+    <!-- title -->
+    <title>RxJava 分发订阅流程</title>
+    <!-- styles -->
+    <link rel="stylesheet" href="/css/style.css">
+    <!-- persian styles -->
+    
+      <link rel="stylesheet" href="/css/rtl.css">
+    
+    <!-- rss -->
+    
+    
+</head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fas fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/about/">About</a></li>
+         
+          <li><a href="/archives/">Writing</a></li>
+         
+          <li><a href="/projects_url">Projects</a></li>
+        
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        <li><a class="icon" href="/2019/08/07/Dart中async与await关键字的理解/"><i class="fas fa-chevron-left" aria-hidden="true" onmouseover="$('#i-prev').toggle();" onmouseout="$('#i-prev').toggle();"></i></a></li>
+        
+        
+        <li><a class="icon" href="/2019/06/20/NotificationListenerService被杀死/"><i class="fas fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fas fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" href="#"><i class="fas fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">Previous post</span>
+      <span id="i-next" class="info" style="display:none;">Next post</span>
+      <span id="i-top" class="info" style="display:none;">Back to top</span>
+      <span id="i-share" class="info" style="display:none;">Share post</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" href="http://www.facebook.com/sharer.php?u=https://3o3o3.com/2019/06/20/RxJava 分发订阅流程/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://twitter.com/share?url=https://3o3o3.com/2019/06/20/RxJava 分发订阅流程/&text=RxJava 分发订阅流程"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=https://3o3o3.com/2019/06/20/RxJava 分发订阅流程/&title=RxJava 分发订阅流程"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=https://3o3o3.com/2019/06/20/RxJava 分发订阅流程/&is_video=false&description=RxJava 分发订阅流程"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=RxJava 分发订阅流程&body=Check out this article: https://3o3o3.com/2019/06/20/RxJava 分发订阅流程/"><i class="fas fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://getpocket.com/save?url=https://3o3o3.com/2019/06/20/RxJava 分发订阅流程/&title=RxJava 分发订阅流程"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://reddit.com/submit?url=https://3o3o3.com/2019/06/20/RxJava 分发订阅流程/&title=RxJava 分发订阅流程"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=https://3o3o3.com/2019/06/20/RxJava 分发订阅流程/&title=RxJava 分发订阅流程"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://digg.com/submit?url=https://3o3o3.com/2019/06/20/RxJava 分发订阅流程/&title=RxJava 分发订阅流程"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.tumblr.com/share/link?url=https://3o3o3.com/2019/06/20/RxJava 分发订阅流程/&name=RxJava 分发订阅流程&description="><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    <div id="toc">
+      <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#一、前言"><span class="toc-number">1.</span> <span class="toc-text">一、前言</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#二、从Demo到原理"><span class="toc-number">2.</span> <span class="toc-text">二、从Demo到原理</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#思路梳理"><span class="toc-number">2.1.</span> <span class="toc-text">思路梳理</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#思路梳理-1"><span class="toc-number">2.2.</span> <span class="toc-text">思路梳理</span></a></li></ol></li></ol>
+    </div>
+  </span>
+</div>
+
+    
+    <div class="content index py4">
+        
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle" itemprop="name headline">
+        RxJava 分发订阅流程
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span itemprop="name">JiapengMa's Blog</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2019-06-20T05:59:02.000Z" itemprop="datePublished">2019-06-20</time>
+        
+      
+    </div>
+
+
+      
+
+      
+    <div class="article-tag">
+        <i class="fas fa-tag"></i>
+        <a class="tag-link" href="/tags/Android/">Android</a>, <a class="tag-link" href="/tags/RxJava/">RxJava</a>
+    </div>
+
+
+    </div>
+  </header>
+  
+
+  <div class="content" itemprop="articleBody">
+    <ul>
+<li><h3 id="一、前言"><a href="#一、前言" class="headerlink" title="一、前言"></a>一、前言</h3></li>
+<li><p>RxJava是什么呢？根据<code>RxJava</code>在<code>GitHub</code>上给出的描述<br>RxJava – Reactive Extensions for the JVM – a library for composing asynchronous and event-based programs using observable sequences for the Java<br>大致意思是：一个可以在JVM上使用的，是由异步的基于事件编写的通过使用可观察序列构成的一个库。<br>关键词：<code>异步</code>，<code>基于事件</code>，<code>可观察序列</code></p>
+</li>
+<li><p>之前只是了解了Rx1.x时候的源码和使用方式，由于当时成员技术栈不统一，就没有在产品中使用。现在随着Rx的持续发热，身为主程的我依然留着对rx的喜爱，故现决定引入rx。</p>
+</li>
+<li><p>虽然有过使用rx的经历，但是现在rx升级到了2.0的版本，变化幅度还是蛮大的，所以抱着从0开始的心态，从新学习Rx2.X的相关代码及使用注意事项。</p>
+</li>
+<li><p>本次学习历程所定目标如下：<br>1.初步了解RxJava2.X的使用流程<br>2.探索<code>Observable</code>发送数据的流程<br>3.明白<code>Observer</code>是如何接收数据的<br>4.解析<code>Observable</code>与<code>Observer</code>的勾搭（如何关联）过程<br>5.探索RxJava线程切换的奥秘<br>6.了解RxJava操作符的实现原理</p>
+</li>
+<li><p>本次学习基于RxJava2.1.1版本的源码</p>
+</li>
+</ul>
+<h3 id="二、从Demo到原理"><a href="#二、从Demo到原理" class="headerlink" title="二、从Demo到原理"></a>二、从Demo到原理</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//1、观察者创建一个Observer</span></span><br><span class="line">Observer observer = <span class="keyword">new</span> Observer() &#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onSubscribe</span><span class="params">(@NonNull Disposable d)</span> </span>&#123;</span><br><span class="line">        Log.d(TAG, <span class="string">"onSubscribe"</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onNext</span><span class="params">(@NonNull String s)</span> </span>&#123;</span><br><span class="line">        Log.d(TAG, <span class="string">"onNext data is :"</span> + s);</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onError</span><span class="params">(@NonNull Throwable e)</span> </span>&#123;</span><br><span class="line">        Log.d(TAG, <span class="string">"onError data is :"</span> + e.toString());</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onComplete</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        Log.d(TAG, <span class="string">"onComplete"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">Observable observable = Observable.create(<span class="keyword">new</span> ObservableOnSubscribe() &#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">subscribe</span><span class="params">(@NonNull ObservableEmitter e)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        e.onNext(<span class="string">"hello"</span>);</span><br><span class="line">        e.onNext(<span class="string">"world"</span>);</span><br><span class="line">        e.onComplete();</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">&#125;);</span><br><span class="line">observable.subscribe(observer);</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><p>结果输出：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">onSubscribe</span><br><span class="line">onNext data is :hello</span><br><span class="line">onNext data is :world</span><br><span class="line">onComplete</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>可以看到，Observer的onSubscribe是最先被调用的，这个回调会有什么用呢？我们后面会讲到。</p>
+</li>
+</ul>
+<hr>
+<ul>
+<li><p>OK，从哪开始入手呢？<code>Observable.create</code>，嗯，整个流程是从create开始的，那么我们就从源头开始吧。先看一下create，他返回的是一个observable对象，也就是被观察的对象。create方法需要传入一个ObservableOnSubscribe来创建，我们看下ObservableOnSubscribe是什么</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">public interface ObservableOnSubscribe&lt;T&gt; &#123;</span><br><span class="line">    /**</span><br><span class="line"> * Called for each Observer that subscribes. * @param e the safe emitter instance, never null</span><br><span class="line"> * @throws Exception on error</span><br><span class="line"> */  void subscribe(@NonNull ObservableEmitter&lt;T&gt; e) throws Exception;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>该接口会接收一个ObservableEmitter的一个对象，然后通过该对象我们可以发送消息也可以安全地取消消息，我们继续看ObservableEmitter这个接口类</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">ObservableEmitter</span>&lt;<span class="title">T</span>&gt; <span class="keyword">extends</span> <span class="title">Emitter</span>&lt;<span class="title">T</span>&gt; </span>&#123;</span><br><span class="line">  </span><br><span class="line">      <span class="function"><span class="keyword">void</span> <span class="title">setDisposable</span><span class="params">(@Nullable Disposable d)</span></span>;</span><br><span class="line">  </span><br><span class="line">      <span class="function"><span class="keyword">void</span> <span class="title">setCancellable</span><span class="params">(@Nullable Cancellable c)</span></span>;</span><br><span class="line">  </span><br><span class="line">      <span class="function"><span class="keyword">boolean</span> <span class="title">isDisposed</span><span class="params">()</span></span>;</span><br><span class="line">  </span><br><span class="line">      <span class="meta">@NonNull</span></span><br><span class="line">      <span class="function">ObservableEmitter&lt;T&gt; <span class="title">serialize</span><span class="params">()</span></span>;</span><br><span class="line">  </span><br><span class="line">       <span class="meta">@Experimental</span></span><br><span class="line">      <span class="function"><span class="keyword">boolean</span> <span class="title">tryOnError</span><span class="params">(@NonNull Throwable t)</span></span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>ObservableEmitter是对Emitter的扩展，而扩展的方法证实RxJava2.0之后引入的，提供了可中途取消等新能力，我们继续看Emitter</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Emitter</span>&lt;<span class="title">T</span>&gt; </span>&#123;</span><br><span class="line">  </span><br><span class="line">       <span class="function"><span class="keyword">void</span> <span class="title">onNext</span><span class="params">(@NonNull T value)</span></span>;</span><br><span class="line">  </span><br><span class="line">      <span class="function"><span class="keyword">void</span> <span class="title">onError</span><span class="params">(@NonNull Throwable error)</span></span>;</span><br><span class="line">  </span><br><span class="line">      <span class="function"><span class="keyword">void</span> <span class="title">onComplete</span><span class="params">()</span></span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>里面的三个方法使用过rx的应该非常眼熟了。看到这里，我们只是了解了传递参数的数据结构，了解到的信息还是比较少的。我们继续看下create内部做了什么操作呢？</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> &lt;T&gt; <span class="function">Observable&lt;T&gt; <span class="title">create</span><span class="params">(ObservableOnSubscribe&lt;T&gt; source)</span> </span>&#123;</span><br><span class="line">    ObjectHelper.requireNonNull(source, <span class="string">"source is null"</span>);</span><br><span class="line">    <span class="keyword">return</span> RxJavaPlugins.onAssembly(<span class="keyword">new</span> ObservableCreate&lt;T&gt;(source));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>RxJavaPlugins或许你会很陌生，其实我也很陌生，不过没关系，我觉得后面会经常遇到RxJavaPlugins，熟悉它是必然的；</p>
+</li>
+<li><p>可以看到我们传入ObservableOnSubscribe被用来创建ObservableCreate，其实ObservableCreate就是Observable的一个实现类哦。</p>
+<h4 id="思路梳理"><a href="#思路梳理" class="headerlink" title="思路梳理"></a>思路梳理</h4></li>
+<li><p>OK，到这里我们先梳理一下思路：<br>1、Observable通过调用create创建一个Observable<br>2、调用create时需要传入一个ObservableOnSubscribe类型的实例参数<br>3、最终传入的ObservableOnSubscribe类型的实例参数作为ObservableCreate构造函数的参数传入，一个Observable就此诞生了</p>
+</li>
+</ul>
+<hr>
+<p>-ObservableCreate又是个什么东东呢？我们分步来，先看ObservableCreate的两个方法</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">ObservableCreate</span>&lt;<span class="title">T</span>&gt; <span class="keyword">extends</span> <span class="title">Observable</span>&lt;<span class="title">T</span>&gt; </span>&#123;</span><br><span class="line">    <span class="keyword">final</span> ObservableOnSubscribe&lt;T&gt; source;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">ObservableCreate</span><span class="params">(ObservableOnSubscribe&lt;T&gt; source)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.source = source;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">subscribeActual</span><span class="params">(Observer&lt;?<span class="keyword">super</span> T&gt; observer)</span> </span>&#123;</span><br><span class="line">        CreateEmitter&lt;T&gt; parent = <span class="keyword">new</span> CreateEmitter&lt;T&gt;(observer);</span><br><span class="line">        observer.onSubscribe(parent);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            source.subscribe(parent);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (Throwable ex) &#123;</span><br><span class="line">            Exceptions.throwIfFatal(ex);</span><br><span class="line">            parent.onError(ex);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">.....</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><p>source：Observable.createc传入的ObservableOnSubscribe实例</p>
+</li>
+<li><p>subscribeActual回调方法，它在调用Observable.subscribe时被调用，即与观察者或则订阅者发生联系时触发。subscribeActual也是实现我们主要逻辑的地方，我们来仔细分析下subscribeActual方法：<br>1、首先subscribeActual传入的参数为Observer类型，也就是我们subscribe时传入的观察者，到底是不是呢？后面会分析到。<br>2、传入的Observer会被包装成一个CreateEmitter，<code>CreateEmitter</code>继承了AtomicReference提供了原子级的控制能力。RxJava2.0提供的新特性与之息息相关哦，这个我们先给它来个关键标签，后面再详细分析。<br>3、 观察者(observer)调用自己的onSubscribe(parent);将包装后的observer传入。这个也是RxJava2.0的变化，真正的订阅在<code>source.subscribe(parent);</code>这句代码被执行后开始，而在此之前先调用了onSubscribe方法来提供RxJava2.0后引入的新能力（如中断能力）。从这里我们也就知道了为何观察者的onSubscribe最先被调用了。（被订阅者说：我也很无辜，他自己调用了自己，我也控制不了╮(╯_╰)╭）<br>4、被订阅者或者说被观察者（source）调用subscribe订阅方法与观察者发生联系。这里进行了异常捕获，如果subscribe抛出了未被捕获的异常，则调用 parent.onError(ex);<br>5、在执行subscribe时也就对应了我们demo中的</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">subscribe</span><span class="params">(@NonNull ObservableEmitter e)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">    e.onNext(<span class="string">"hello"</span>);</span><br><span class="line">    e.onNext(<span class="string">"world"</span>);</span><br><span class="line">    e.onComplete();</span><br><span class="line">  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>Ok，看来subscribeActual这个回调确实很重要，前面我们也说了subscribeActual回调方法在Observable.subscribe被调用时执行的，真的像我说的一样么？万一我看走眼了</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@SchedulerSupport</span>(SchedulerSupport.NONE)</span><br><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">void</span> <span class="title">subscribe</span><span class="params">(Observersuper T&gt; observer)</span> </span>&#123;</span><br><span class="line">    ObjectHelper.requireNonNull(observer, <span class="string">"observer is null"</span>);</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        observer = RxJavaPlugins.onSubscribe(<span class="keyword">this</span>, observer);</span><br><span class="line">  </span><br><span class="line">        ObjectHelper.requireNonNull(observer, <span class="string">"Plugin returned null Observer"</span>);</span><br><span class="line">  </span><br><span class="line">        subscribeActual(observer);</span><br><span class="line">    &#125; <span class="keyword">catch</span> (NullPointerException e) &#123; <span class="comment">// NOPMD</span></span><br><span class="line">  <span class="keyword">throw</span> e;</span><br><span class="line">    &#125; <span class="keyword">catch</span> (Throwable e) &#123;</span><br><span class="line">        Exceptions.throwIfFatal(e);</span><br><span class="line">        <span class="comment">// can't call onError because no way to know if a Disposable has been set or not</span></span><br><span class="line"> <span class="comment">// can't call onSubscribe because the call might have set a Subscription already  RxJavaPlugins.onError(e);</span></span><br><span class="line">  </span><br><span class="line">        NullPointerException npe = <span class="keyword">new</span> NullPointerException(<span class="string">"Actually not, but can't throw other exceptions due to RS"</span>);</span><br><span class="line">        npe.initCause(e);</span><br><span class="line">        <span class="keyword">throw</span> npe;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>OK，代码不多，可以看到RxJavaPlugins.onSubscribe(this, observer);，我们RxJava2.0中的Hook能力就是来自这里了。然后继续看下面subscribeActual(observer);被调用了。</p>
+<h4 id="思路梳理-1"><a href="#思路梳理-1" class="headerlink" title="思路梳理"></a>思路梳理</h4><p>1、传入的ObservableOnSubscribe最终被用来创建成ObservableCreate</p>
+<p>2、ObservableCreate持有我们的被观察者对象以及订阅时所触发的回调subscribeActual</p>
+<p>3、在subscribeActual实现了我们的主要逻辑，包括</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">observer.onSubscribe(parent);</span><br></pre></td></tr></table></figure>
+
+<p>,</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">source.subscribe(parent);</span><br></pre></td></tr></table></figure>
+
+<p>,</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">parent.onError(ex);</span><br></pre></td></tr></table></figure>
+
+<p>的调用</p>
+<p>4、在Observable的subscribe被调用时开始执行事件分发流程。</p>
+</li>
+</ul>
+
+  </div>
+</article>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/about/">About</a></li>
+         
+          <li><a href="/archives/">Writing</a></li>
+         
+          <li><a href="/projects_url">Projects</a></li>
+        
+      </ul>
+    </div>
+
+    <div id="toc-footer" style="display: none">
+      <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#一、前言"><span class="toc-number">1.</span> <span class="toc-text">一、前言</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#二、从Demo到原理"><span class="toc-number">2.</span> <span class="toc-text">二、从Demo到原理</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#思路梳理"><span class="toc-number">2.1.</span> <span class="toc-text">思路梳理</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#思路梳理-1"><span class="toc-number">2.2.</span> <span class="toc-text">思路梳理</span></a></li></ol></li></ol>
+    </div>
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" href="http://www.facebook.com/sharer.php?u=https://3o3o3.com/2019/06/20/RxJava 分发订阅流程/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://twitter.com/share?url=https://3o3o3.com/2019/06/20/RxJava 分发订阅流程/&text=RxJava 分发订阅流程"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=https://3o3o3.com/2019/06/20/RxJava 分发订阅流程/&title=RxJava 分发订阅流程"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=https://3o3o3.com/2019/06/20/RxJava 分发订阅流程/&is_video=false&description=RxJava 分发订阅流程"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=RxJava 分发订阅流程&body=Check out this article: https://3o3o3.com/2019/06/20/RxJava 分发订阅流程/"><i class="fas fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://getpocket.com/save?url=https://3o3o3.com/2019/06/20/RxJava 分发订阅流程/&title=RxJava 分发订阅流程"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://reddit.com/submit?url=https://3o3o3.com/2019/06/20/RxJava 分发订阅流程/&title=RxJava 分发订阅流程"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=https://3o3o3.com/2019/06/20/RxJava 分发订阅流程/&title=RxJava 分发订阅流程"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://digg.com/submit?url=https://3o3o3.com/2019/06/20/RxJava 分发订阅流程/&title=RxJava 分发订阅流程"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.tumblr.com/share/link?url=https://3o3o3.com/2019/06/20/RxJava 分发订阅流程/&name=RxJava 分发订阅流程&description="><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fas fa-bars fa-lg" aria-hidden="true"></i> Menu</a>
+        <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fas fa-list fa-lg" aria-hidden="true"></i> TOC</a>
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fas fa-share-alt fa-lg" aria-hidden="true"></i> Share</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fas fa-chevron-up fa-lg" aria-hidden="true"></i> Top</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy; 2019 JiapengMa
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/about/">About</a></li>
+         
+          <li><a href="/archives/">Writing</a></li>
+         
+          <li><a href="/projects_url">Projects</a></li>
+        
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+<link rel="stylesheet" href="/lib/justified-gallery/css/justifiedGallery.min.css">
+
+    <!-- jquery -->
+<script src="/lib/jquery/jquery.min.js"></script>
+<script src="/lib/justified-gallery/js/jquery.justifiedGallery.min.js"></script>
+<!-- clipboard -->
+
+  <script src="/lib/clipboard/clipboard.min.js"></script>
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"Copy to clipboard!\">";
+    btn += '<i class="far fa-clone"></i>';
+    btn += '</span>'; 
+    // mount it!
+    $(".highlight .code pre").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      target: function(trigger) {
+        return trigger.nextElementSibling;
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "Copied!");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+<script src="/js/main.js"></script>
+<!-- search -->
+
+<!-- Google Analytics -->
+
+<!-- Baidu Analytics -->
+
+<!-- Disqus Comments -->
+
+
+</body>
+</html>

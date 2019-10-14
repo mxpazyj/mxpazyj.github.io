@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang=en>
+<head><meta name="generator" content="Hexo 3.9.0">
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="description" content="起因公司的产品有一个通知提醒的功能，使用NotificationListenerService实现，并且把通话状态监听的相应操作也放在了该Service上实现，发现在 华为EMUI 9.0 (Android 9.0) 上出现有相应权限但是无法监听通话状态的现象 问题查找调试过程中发现继承于NotificationListenerService的服务调用的onDestory()方法 一开始只以为是华">
+<meta name="keywords" content="Android">
+<meta property="og:type" content="article">
+<meta property="og:title" content="NotificationListenerService被杀死">
+<meta property="og:url" content="https://3o3o3.com/2019/06/20/NotificationListenerService被杀死/index.html">
+<meta property="og:site_name" content="JiapengMa&#39;s Blog">
+<meta property="og:description" content="起因公司的产品有一个通知提醒的功能，使用NotificationListenerService实现，并且把通话状态监听的相应操作也放在了该Service上实现，发现在 华为EMUI 9.0 (Android 9.0) 上出现有相应权限但是无法监听通话状态的现象 问题查找调试过程中发现继承于NotificationListenerService的服务调用的onDestory()方法 一开始只以为是华">
+<meta property="og:locale" content="en">
+<meta property="og:updated_time" content="2019-10-14T03:49:27.642Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="NotificationListenerService被杀死">
+<meta name="twitter:description" content="起因公司的产品有一个通知提醒的功能，使用NotificationListenerService实现，并且把通话状态监听的相应操作也放在了该Service上实现，发现在 华为EMUI 9.0 (Android 9.0) 上出现有相应权限但是无法监听通话状态的现象 问题查找调试过程中发现继承于NotificationListenerService的服务调用的onDestory()方法 一开始只以为是华">
+    
+    
+        
+          
+              <link rel="shortcut icon" href="/images/favicon.ico">
+          
+        
+        
+          
+            <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+          
+        
+        
+          
+            <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+          
+        
+    
+    <!-- title -->
+    <title>NotificationListenerService被杀死</title>
+    <!-- styles -->
+    <link rel="stylesheet" href="/css/style.css">
+    <!-- persian styles -->
+    
+      <link rel="stylesheet" href="/css/rtl.css">
+    
+    <!-- rss -->
+    
+    
+</head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fas fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/about/">About</a></li>
+         
+          <li><a href="/archives/">Writing</a></li>
+         
+          <li><a href="/projects_url">Projects</a></li>
+        
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        <li><a class="icon" href="/2019/06/20/RxJava 分发订阅流程/"><i class="fas fa-chevron-left" aria-hidden="true" onmouseover="$('#i-prev').toggle();" onmouseout="$('#i-prev').toggle();"></i></a></li>
+        
+        
+        <li><a class="icon" href="/2019/05/15/GO Mobile笔记/"><i class="fas fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fas fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" href="#"><i class="fas fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">Previous post</span>
+      <span id="i-next" class="info" style="display:none;">Next post</span>
+      <span id="i-top" class="info" style="display:none;">Back to top</span>
+      <span id="i-share" class="info" style="display:none;">Share post</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" href="http://www.facebook.com/sharer.php?u=https://3o3o3.com/2019/06/20/NotificationListenerService被杀死/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://twitter.com/share?url=https://3o3o3.com/2019/06/20/NotificationListenerService被杀死/&text=NotificationListenerService被杀死"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=https://3o3o3.com/2019/06/20/NotificationListenerService被杀死/&title=NotificationListenerService被杀死"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=https://3o3o3.com/2019/06/20/NotificationListenerService被杀死/&is_video=false&description=NotificationListenerService被杀死"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=NotificationListenerService被杀死&body=Check out this article: https://3o3o3.com/2019/06/20/NotificationListenerService被杀死/"><i class="fas fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://getpocket.com/save?url=https://3o3o3.com/2019/06/20/NotificationListenerService被杀死/&title=NotificationListenerService被杀死"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://reddit.com/submit?url=https://3o3o3.com/2019/06/20/NotificationListenerService被杀死/&title=NotificationListenerService被杀死"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=https://3o3o3.com/2019/06/20/NotificationListenerService被杀死/&title=NotificationListenerService被杀死"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://digg.com/submit?url=https://3o3o3.com/2019/06/20/NotificationListenerService被杀死/&title=NotificationListenerService被杀死"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.tumblr.com/share/link?url=https://3o3o3.com/2019/06/20/NotificationListenerService被杀死/&name=NotificationListenerService被杀死&description="><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    <div id="toc">
+      <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#起因"><span class="toc-number">1.</span> <span class="toc-text">起因</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#问题查找"><span class="toc-number">2.</span> <span class="toc-text">问题查找</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#问题查证"><span class="toc-number">3.</span> <span class="toc-text">问题查证</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#总结"><span class="toc-number">4.</span> <span class="toc-text">总结</span></a></li></ol>
+    </div>
+  </span>
+</div>
+
+    
+    <div class="content index py4">
+        
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle" itemprop="name headline">
+        NotificationListenerService被杀死
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span itemprop="name">JiapengMa's Blog</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2019-06-20T05:00:02.000Z" itemprop="datePublished">2019-06-20</time>
+        
+      
+    </div>
+
+
+      
+
+      
+    <div class="article-tag">
+        <i class="fas fa-tag"></i>
+        <a class="tag-link" href="/tags/Android/">Android</a>
+    </div>
+
+
+    </div>
+  </header>
+  
+
+  <div class="content" itemprop="articleBody">
+    <h3 id="起因"><a href="#起因" class="headerlink" title="起因"></a>起因</h3><p>公司的产品有一个通知提醒的功能，使用<code>NotificationListenerService</code>实现，并且把通话状态监听的相应操作也放在了该Service上实现，发现在 <strong>华为EMUI 9.0 (Android 9.0)</strong> 上出现有相应权限但是无法监听通话状态的现象</p>
+<h3 id="问题查找"><a href="#问题查找" class="headerlink" title="问题查找"></a>问题查找</h3><p>调试过程中发现继承于<code>NotificationListenerService</code>的服务调用的<code>onDestory()</code>方法</p>
+<p>一开始只以为是华为的杀后台的功能，但是看了一下应用还是存活的，而且应用其他服务并未调用<code>onDestory()</code></p>
+<p>确定是由<code>NotificationListenerService</code>引起的问题</p>
+<h3 id="问题查证"><a href="#问题查证" class="headerlink" title="问题查证"></a>问题查证</h3><p>打开应用的监听通知权限，并重复之前的测试操作，发现继承于<code>NotificationListenerService</code>的服务这次并没有被杀死</p>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>在<strong>华为EMUI 9.0 (Android 9.0)</strong> 上，加入了对<code>NotificationListenerService</code>的监管，没有获取到权限的<code>NotificationListenerService</code>会在一定时间内被杀死</p>
+<p>Service的使用上还是应该各司其职，不应该把通话状态监听的功能放在<code>NotificationListenerService</code>上实现，引起不必要的误会</p>
+
+  </div>
+</article>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/about/">About</a></li>
+         
+          <li><a href="/archives/">Writing</a></li>
+         
+          <li><a href="/projects_url">Projects</a></li>
+        
+      </ul>
+    </div>
+
+    <div id="toc-footer" style="display: none">
+      <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#起因"><span class="toc-number">1.</span> <span class="toc-text">起因</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#问题查找"><span class="toc-number">2.</span> <span class="toc-text">问题查找</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#问题查证"><span class="toc-number">3.</span> <span class="toc-text">问题查证</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#总结"><span class="toc-number">4.</span> <span class="toc-text">总结</span></a></li></ol>
+    </div>
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" href="http://www.facebook.com/sharer.php?u=https://3o3o3.com/2019/06/20/NotificationListenerService被杀死/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://twitter.com/share?url=https://3o3o3.com/2019/06/20/NotificationListenerService被杀死/&text=NotificationListenerService被杀死"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=https://3o3o3.com/2019/06/20/NotificationListenerService被杀死/&title=NotificationListenerService被杀死"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=https://3o3o3.com/2019/06/20/NotificationListenerService被杀死/&is_video=false&description=NotificationListenerService被杀死"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=NotificationListenerService被杀死&body=Check out this article: https://3o3o3.com/2019/06/20/NotificationListenerService被杀死/"><i class="fas fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://getpocket.com/save?url=https://3o3o3.com/2019/06/20/NotificationListenerService被杀死/&title=NotificationListenerService被杀死"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://reddit.com/submit?url=https://3o3o3.com/2019/06/20/NotificationListenerService被杀死/&title=NotificationListenerService被杀死"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=https://3o3o3.com/2019/06/20/NotificationListenerService被杀死/&title=NotificationListenerService被杀死"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://digg.com/submit?url=https://3o3o3.com/2019/06/20/NotificationListenerService被杀死/&title=NotificationListenerService被杀死"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.tumblr.com/share/link?url=https://3o3o3.com/2019/06/20/NotificationListenerService被杀死/&name=NotificationListenerService被杀死&description="><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fas fa-bars fa-lg" aria-hidden="true"></i> Menu</a>
+        <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fas fa-list fa-lg" aria-hidden="true"></i> TOC</a>
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fas fa-share-alt fa-lg" aria-hidden="true"></i> Share</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fas fa-chevron-up fa-lg" aria-hidden="true"></i> Top</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy; 2019 JiapengMa
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/about/">About</a></li>
+         
+          <li><a href="/archives/">Writing</a></li>
+         
+          <li><a href="/projects_url">Projects</a></li>
+        
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+<link rel="stylesheet" href="/lib/justified-gallery/css/justifiedGallery.min.css">
+
+    <!-- jquery -->
+<script src="/lib/jquery/jquery.min.js"></script>
+<script src="/lib/justified-gallery/js/jquery.justifiedGallery.min.js"></script>
+<!-- clipboard -->
+
+  <script src="/lib/clipboard/clipboard.min.js"></script>
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"Copy to clipboard!\">";
+    btn += '<i class="far fa-clone"></i>';
+    btn += '</span>'; 
+    // mount it!
+    $(".highlight .code pre").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      target: function(trigger) {
+        return trigger.nextElementSibling;
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "Copied!");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+<script src="/js/main.js"></script>
+<!-- search -->
+
+<!-- Google Analytics -->
+
+<!-- Baidu Analytics -->
+
+<!-- Disqus Comments -->
+
+
+</body>
+</html>

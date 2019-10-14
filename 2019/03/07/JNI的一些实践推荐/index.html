@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang=en>
+<head><meta name="generator" content="Hexo 3.9.0">
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="description" content="回收本地引用我们在使用jni的时候，除了要遵循原生的内存管理规范，比如new出来的对象需要delete掉，还要额外对于jni的对象进行回收处理。 不需要回收的类型:jboolean、 jchar 、jint等基础数据类型 需要回收的类型:全局引用、jobject以及其子类jclass、jstring、jarray等 释放方法 jstring &amp;amp; char *  123456// 创建 js">
+<meta name="keywords" content="Android,JNI">
+<meta property="og:type" content="article">
+<meta property="og:title" content="JNI的一些实践推荐">
+<meta property="og:url" content="https://3o3o3.com/2019/03/07/JNI的一些实践推荐/index.html">
+<meta property="og:site_name" content="JiapengMa&#39;s Blog">
+<meta property="og:description" content="回收本地引用我们在使用jni的时候，除了要遵循原生的内存管理规范，比如new出来的对象需要delete掉，还要额外对于jni的对象进行回收处理。 不需要回收的类型:jboolean、 jchar 、jint等基础数据类型 需要回收的类型:全局引用、jobject以及其子类jclass、jstring、jarray等 释放方法 jstring &amp;amp; char *  123456// 创建 js">
+<meta property="og:locale" content="en">
+<meta property="og:updated_time" content="2019-10-14T03:57:15.945Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="JNI的一些实践推荐">
+<meta name="twitter:description" content="回收本地引用我们在使用jni的时候，除了要遵循原生的内存管理规范，比如new出来的对象需要delete掉，还要额外对于jni的对象进行回收处理。 不需要回收的类型:jboolean、 jchar 、jint等基础数据类型 需要回收的类型:全局引用、jobject以及其子类jclass、jstring、jarray等 释放方法 jstring &amp;amp; char *  123456// 创建 js">
+    
+    
+        
+          
+              <link rel="shortcut icon" href="/images/favicon.ico">
+          
+        
+        
+          
+            <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+          
+        
+        
+          
+            <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+          
+        
+    
+    <!-- title -->
+    <title>JNI的一些实践推荐</title>
+    <!-- styles -->
+    <link rel="stylesheet" href="/css/style.css">
+    <!-- persian styles -->
+    
+      <link rel="stylesheet" href="/css/rtl.css">
+    
+    <!-- rss -->
+    
+    
+</head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fas fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/about/">About</a></li>
+         
+          <li><a href="/archives/">Writing</a></li>
+         
+          <li><a href="/projects_url">Projects</a></li>
+        
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        <li><a class="icon" href="/2019/03/07/IDEA（Android Studio）系列插件开发中遇到的一个问题/"><i class="fas fa-chevron-left" aria-hidden="true" onmouseover="$('#i-prev').toggle();" onmouseout="$('#i-prev').toggle();"></i></a></li>
+        
+        
+        <li><a class="icon" href="/2017/02/06/macOS下配置Phpstrom+MAMP/"><i class="fas fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fas fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" href="#"><i class="fas fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">Previous post</span>
+      <span id="i-next" class="info" style="display:none;">Next post</span>
+      <span id="i-top" class="info" style="display:none;">Back to top</span>
+      <span id="i-share" class="info" style="display:none;">Share post</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" href="http://www.facebook.com/sharer.php?u=https://3o3o3.com/2019/03/07/JNI的一些实践推荐/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://twitter.com/share?url=https://3o3o3.com/2019/03/07/JNI的一些实践推荐/&text=JNI的一些实践推荐"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=https://3o3o3.com/2019/03/07/JNI的一些实践推荐/&title=JNI的一些实践推荐"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=https://3o3o3.com/2019/03/07/JNI的一些实践推荐/&is_video=false&description=JNI的一些实践推荐"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=JNI的一些实践推荐&body=Check out this article: https://3o3o3.com/2019/03/07/JNI的一些实践推荐/"><i class="fas fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://getpocket.com/save?url=https://3o3o3.com/2019/03/07/JNI的一些实践推荐/&title=JNI的一些实践推荐"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://reddit.com/submit?url=https://3o3o3.com/2019/03/07/JNI的一些实践推荐/&title=JNI的一些实践推荐"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=https://3o3o3.com/2019/03/07/JNI的一些实践推荐/&title=JNI的一些实践推荐"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://digg.com/submit?url=https://3o3o3.com/2019/03/07/JNI的一些实践推荐/&title=JNI的一些实践推荐"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.tumblr.com/share/link?url=https://3o3o3.com/2019/03/07/JNI的一些实践推荐/&name=JNI的一些实践推荐&description="><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    <div id="toc">
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#回收本地引用"><span class="toc-number">1.</span> <span class="toc-text">回收本地引用</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#释放方法"><span class="toc-number">1.1.</span> <span class="toc-text">释放方法</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#缓存MethodID以及FieldID"><span class="toc-number">2.</span> <span class="toc-text">缓存MethodID以及FieldID</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#在使用时缓存"><span class="toc-number">2.1.</span> <span class="toc-text">在使用时缓存</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#在类加载的时候缓存"><span class="toc-number">2.2.</span> <span class="toc-text">在类加载的时候缓存</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#两种方式的区别"><span class="toc-number">3.</span> <span class="toc-text">两种方式的区别</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#为什么不能缓存jclass"><span class="toc-number">4.</span> <span class="toc-text">为什么不能缓存jclass</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#参数传递最好使用基础类型"><span class="toc-number">5.</span> <span class="toc-text">参数传递最好使用基础类型</span></a></li></ol>
+    </div>
+  </span>
+</div>
+
+    
+    <div class="content index py4">
+        
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle" itemprop="name headline">
+        JNI的一些实践推荐
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span itemprop="name">JiapengMa's Blog</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2019-03-07T02:12:02.000Z" itemprop="datePublished">2019-03-07</time>
+        
+      
+    </div>
+
+
+      
+
+      
+    <div class="article-tag">
+        <i class="fas fa-tag"></i>
+        <a class="tag-link" href="/tags/Android/">Android</a>, <a class="tag-link" href="/tags/JNI/">JNI</a>
+    </div>
+
+
+    </div>
+  </header>
+  
+
+  <div class="content" itemprop="articleBody">
+    <h2 id="回收本地引用"><a href="#回收本地引用" class="headerlink" title="回收本地引用"></a>回收本地引用</h2><p>我们在使用jni的时候，除了要遵循原生的内存管理规范，比如new出来的对象需要delete掉，还要额外对于jni的对象进行回收处理。</p>
+<p>不需要回收的类型:jboolean、 jchar 、jint等基础数据类型</p>
+<p>需要回收的类型:全局引用、jobject以及其子类jclass、jstring、jarray等</p>
+<h3 id="释放方法"><a href="#释放方法" class="headerlink" title="释放方法"></a>释放方法</h3><ol>
+<li>jstring &amp; char *</li>
+</ol>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 创建 jstring 和 char*</span></span><br><span class="line">jstring jstr = (jniEnv)-&gt;CallObjectMethod(jniEnv, mPerson, getName); </span><br><span class="line"><span class="keyword">char</span> cstr = (<span class="keyword">char</span>) (jniEnv)-&gt;GetStringUTFChars(jniEnv,jstr, <span class="number">0</span>); </span><br><span class="line"><span class="comment">// 释放</span></span><br><span class="line">(jniEnv)-&gt;ReleaseStringUTFChars(jniEnv, jstr, cstr); </span><br><span class="line">(jniEnv)-&gt;DeleteLocalRef(jniEnv, jstr);</span><br></pre></td></tr></table></figure>
+
+<ol start="2">
+<li>jobject，jobjectArray，jclass ，jmethodID等引用类型</li>
+</ol>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">(*jniEnv)-&gt;DeleteLocalRef(jniEnv, XXX);</span><br></pre></td></tr></table></figure>
+
+<ol start="3">
+<li>jbyteArray</li>
+</ol>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">jbyteArray audioArray = jnienv-&gt;NewByteArray(frameSize);</span><br><span class="line">jnienv-&gt;DeleteLocalRef(audioArray);</span><br></pre></td></tr></table></figure>
+
+<ol start="4">
+<li>GetByteArrayElements</li>
+</ol>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">jbyte* <span class="built_in">array</span>= (*env)-&gt;GetByteArrayElements(env,jarray,&amp;isCopy);</span><br><span class="line">(*env)-&gt;ReleaseByteArrayElements(env,jarray,<span class="built_in">array</span>,<span class="number">0</span>);</span><br></pre></td></tr></table></figure>
+
+<ol start="5">
+<li>NewGlobalRef<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">jobject ref= env-&gt;NewGlobalRef(customObj);</span><br><span class="line">env-&gt;DeleteGlobalRef(customObj);</span><br></pre></td></tr></table></figure>
+
+</li>
+</ol>
+<h2 id="缓存MethodID以及FieldID"><a href="#缓存MethodID以及FieldID" class="headerlink" title="缓存MethodID以及FieldID"></a>缓存MethodID以及FieldID</h2><p>我们在调用java方法的时候都是通过jni去间接调用，每一次都需要FindClass、GetMethodID、GetFieldID，但是jni操作其实是很耗费性能的，所以我们可以直接将MethodID、FieldID给缓存起来，这样就可以提高效率。</p>
+<h3 id="在使用时缓存"><a href="#在使用时缓存" class="headerlink" title="在使用时缓存"></a>在使用时缓存</h3><p>C中的static变量可以只初始化一次，然后在程序运行期间一直存在，所以我们可以使用static局部变量来在使用时缓存</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> jmethodID id = null;</span><br><span class="line"><span class="keyword">if</span>(id == null)&#123;</span><br><span class="line">	id = env-&gt;GetMethonID(<span class="comment">//)</span></span><br><span class="line">	<span class="keyword">if</span>(id == null)&#123;</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="在类加载的时候缓存"><a href="#在类加载的时候缓存" class="headerlink" title="在类加载的时候缓存"></a>在类加载的时候缓存</h3><p>可以看到，我们在java的static方法中主动进行调用去缓存ID</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//java</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Test</span></span>&#123;</span><br><span class="line">	<span class="keyword">static</span>&#123;</span><br><span class="line">		System.loadLibrary(<span class="string">"///"</span>)</span><br><span class="line">		initIds();</span><br><span class="line">	&#125;</span><br><span class="line">	</span><br><span class="line">	<span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">native</span> <span class="keyword">void</span> <span class="title">initIds</span><span class="params">()</span></span>;</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line"><span class="comment">//native</span></span><br><span class="line">jmethodID id;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">initIds</span><span class="params">()</span></span>&#123;</span><br><span class="line">	id = <span class="comment">////GetMethonID()</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="两种方式的区别"><a href="#两种方式的区别" class="headerlink" title="两种方式的区别"></a>两种方式的区别</h2><p>比起在类加载时进行缓存，使用时缓存有如下缺点</p>
+<p>1、使用时缓存，每次都得判断是否为null</p>
+<p>2、方法id和字段id在类被unload的时候就会失效，如果类被unload了再load，那么缓存的id就不对了</p>
+<h2 id="为什么不能缓存jclass"><a href="#为什么不能缓存jclass" class="headerlink" title="为什么不能缓存jclass"></a>为什么不能缓存jclass</h2><p>jclass是jobject的子类，当我们在native方法中使用FindClass或者GetObjectClass获取jclass的时候，获取到的只是一个局部引用，当方法结束以后，局部引用会被系统回收，当我们再次调用的时候，就会让程序崩溃。</p>
+<p>更多关于局部引用的详解请参看:<a href="https://www.ibm.com/developerworks/cn/java/j-lo-jnileak/" target="_blank" rel="noopener">https://www.ibm.com/developerworks/cn/java/j-lo-jnileak/</a></p>
+<h2 id="参数传递最好使用基础类型"><a href="#参数传递最好使用基础类型" class="headerlink" title="参数传递最好使用基础类型"></a>参数传递最好使用基础类型</h2><p>我们可以看到，sumValues2是传递的object，我们想获取其字段，需要使用jni操作，所以如果不是非必要，我们可以在java层就将字段拆解传递</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">sumValues</span><span class="params">(JNIEnv* env, jobject obj, jint a, jint b,jint c, jint d, jint e, jint f)</span></span>&#123;</span><br><span class="line">   <span class="keyword">return</span> a + b + c + d + e + f;</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">sumValues2</span><span class="params">(JNIEnv* env, jobject obj, jobject allValues)</span></span>&#123;</span><br><span class="line"> </span><br><span class="line">   jint avalue = (*env)-&gt;GetIntField(env, allValues, a);</span><br><span class="line">   jint bvalue = (*env)-&gt;GetIntField(env, allValues, b);</span><br><span class="line">   jint cvalue = (*env)-&gt;GetIntField(env, allValues, c);</span><br><span class="line">   jint dvalue = (*env)-&gt;GetIntField(env, allValues, d);</span><br><span class="line">   jint evalue = (*env)-&gt;GetIntField(env, allValues, e);</span><br><span class="line">   jint fvalue = (*env)-&gt;GetIntField(env, allValues, f);</span><br><span class="line">    </span><br><span class="line">   <span class="keyword">return</span> avalue + bvalue + cvalue + dvalue + evalue + fvalue;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+  </div>
+</article>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/about/">About</a></li>
+         
+          <li><a href="/archives/">Writing</a></li>
+         
+          <li><a href="/projects_url">Projects</a></li>
+        
+      </ul>
+    </div>
+
+    <div id="toc-footer" style="display: none">
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#回收本地引用"><span class="toc-number">1.</span> <span class="toc-text">回收本地引用</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#释放方法"><span class="toc-number">1.1.</span> <span class="toc-text">释放方法</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#缓存MethodID以及FieldID"><span class="toc-number">2.</span> <span class="toc-text">缓存MethodID以及FieldID</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#在使用时缓存"><span class="toc-number">2.1.</span> <span class="toc-text">在使用时缓存</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#在类加载的时候缓存"><span class="toc-number">2.2.</span> <span class="toc-text">在类加载的时候缓存</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#两种方式的区别"><span class="toc-number">3.</span> <span class="toc-text">两种方式的区别</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#为什么不能缓存jclass"><span class="toc-number">4.</span> <span class="toc-text">为什么不能缓存jclass</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#参数传递最好使用基础类型"><span class="toc-number">5.</span> <span class="toc-text">参数传递最好使用基础类型</span></a></li></ol>
+    </div>
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" href="http://www.facebook.com/sharer.php?u=https://3o3o3.com/2019/03/07/JNI的一些实践推荐/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://twitter.com/share?url=https://3o3o3.com/2019/03/07/JNI的一些实践推荐/&text=JNI的一些实践推荐"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=https://3o3o3.com/2019/03/07/JNI的一些实践推荐/&title=JNI的一些实践推荐"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=https://3o3o3.com/2019/03/07/JNI的一些实践推荐/&is_video=false&description=JNI的一些实践推荐"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=JNI的一些实践推荐&body=Check out this article: https://3o3o3.com/2019/03/07/JNI的一些实践推荐/"><i class="fas fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://getpocket.com/save?url=https://3o3o3.com/2019/03/07/JNI的一些实践推荐/&title=JNI的一些实践推荐"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://reddit.com/submit?url=https://3o3o3.com/2019/03/07/JNI的一些实践推荐/&title=JNI的一些实践推荐"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=https://3o3o3.com/2019/03/07/JNI的一些实践推荐/&title=JNI的一些实践推荐"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://digg.com/submit?url=https://3o3o3.com/2019/03/07/JNI的一些实践推荐/&title=JNI的一些实践推荐"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.tumblr.com/share/link?url=https://3o3o3.com/2019/03/07/JNI的一些实践推荐/&name=JNI的一些实践推荐&description="><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fas fa-bars fa-lg" aria-hidden="true"></i> Menu</a>
+        <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fas fa-list fa-lg" aria-hidden="true"></i> TOC</a>
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fas fa-share-alt fa-lg" aria-hidden="true"></i> Share</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fas fa-chevron-up fa-lg" aria-hidden="true"></i> Top</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy; 2019 JiapengMa
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/about/">About</a></li>
+         
+          <li><a href="/archives/">Writing</a></li>
+         
+          <li><a href="/projects_url">Projects</a></li>
+        
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+<link rel="stylesheet" href="/lib/justified-gallery/css/justifiedGallery.min.css">
+
+    <!-- jquery -->
+<script src="/lib/jquery/jquery.min.js"></script>
+<script src="/lib/justified-gallery/js/jquery.justifiedGallery.min.js"></script>
+<!-- clipboard -->
+
+  <script src="/lib/clipboard/clipboard.min.js"></script>
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"Copy to clipboard!\">";
+    btn += '<i class="far fa-clone"></i>';
+    btn += '</span>'; 
+    // mount it!
+    $(".highlight .code pre").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      target: function(trigger) {
+        return trigger.nextElementSibling;
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "Copied!");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+<script src="/js/main.js"></script>
+<!-- search -->
+
+<!-- Google Analytics -->
+
+<!-- Baidu Analytics -->
+
+<!-- Disqus Comments -->
+
+
+</body>
+</html>
